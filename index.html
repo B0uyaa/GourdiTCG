@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>PokeDeck Scout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+<style>
+:root{
+  --bg:#070c18; --bg2:#0a1220; --card:#0f1c2e; --card2:#131f30;
+  --bord:#1a2d45; --bord2:#1e3550;
+  --acc:#3d8eff; --green:#4ecb8a; --red:#e05060; --amber:#e0a030; --purple:#b07aff;
+  --t1:#d4e8ff; --t2:#6a90b0; --t3:#3a5570;
+  --fd:'Rajdhani',sans-serif; --fb:'Inter',sans-serif;
+  --r:14px; --rs:8px;
+  --sb:env(safe-area-inset-bottom,16px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);color:var(--t1);font-family:var(--fb);height:100%;overflow:hidden;}
+input,textarea{user-select:text;-webkit-user-select:text;}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;overflow:hidden;}
+
+/* TOPBAR */
+.topbar{background:var(--bg2);border-bottom:.5px solid var(--bord);padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo-ico{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1a3a6a,#0d2a50);border:1px solid #2a4a7a;display:flex;align-items:center;justify-content:center;}
+.logo-ico i{color:var(--acc);font-size:15px;}
+.logo-txt{font-family:var(--fd);font-size:17px;font-weight:700;letter-spacing:.04em;}
+.logo-txt span{color:var(--acc);}
+.top-acts{display:flex;gap:14px;}
+.top-acts i{font-size:20px;color:var(--t3);cursor:pointer;}
+
+/* TICKER */
+.ticker-zone{background:var(--bg2);border-bottom:.5px solid var(--bord);display:flex;height:62px;flex-shrink:0;overflow:hidden;}
+.ticker-pin{width:96px;flex-shrink:0;background:var(--card);border-right:.5px solid var(--bord);padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between;}
+.ticker-pin-tag{font-size:8px;font-weight:600;color:var(--acc);text-transform:uppercase;letter-spacing:.06em;}
+.ticker-pin-txt{font-size:10px;color:var(--t1);font-weight:500;line-height:1.3;}
+.ticker-pin-time{font-size:8px;color:var(--t3);}
+.ticker-wrap{flex:1;overflow:hidden;}
+.ticker-track{display:flex;height:62px;width:max-content;animation:tick 26s linear infinite;}
+.ticker-wrap:active .ticker-track{animation-play-state:paused;}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{width:136px;flex-shrink:0;padding:6px 8px;border-right:.5px solid var(--bord);display:flex;flex-direction:column;justify-content:space-between;height:62px;}
+.ticker-tag{font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.ticker-txt{font-size:10px;color:var(--t2);line-height:1.3;flex:1;padding:2px 0;}
+.ticker-time{font-size:8px;color:var(--t3);}
+
+/* SCREEN */
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.screen::-webkit-scrollbar{display:none;}
+.page{display:none;padding-bottom:20px;}
+.page.active{display:block;}
+
+/* TABBAR */
+.tabbar{background:var(--bg2);border-top:.5px solid var(--bord);display:flex;justify-content:space-around;padding:6px 0 calc(6px + var(--sb));flex-shrink:0;}
+.tabbtn{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--t3);font-size:9px;font-weight:500;padding:4px 6px;cursor:pointer;border:none;background:none;font-family:var(--fb);transition:color .2s;}
+.tabbtn i{font-size:20px;}
+.tabbtn.on{color:var(--acc);}
+.tabbtn.on i{filter:drop-shadow(0 0 5px rgba(61,142,255,.5));}
+
+/* SHARED */
+.ptitle{padding:12px 16px 6px;font-family:var(--fd);font-size:19px;font-weight:700;letter-spacing:.03em;display:flex;align-items:center;justify-content:space-between;}
+.plabel{padding:9px 16px 5px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:5px;}
+.plabel i{font-size:12px;}
+.bdg{font-size:9px;font-weight:600;padding:2px 6px;border-radius:20px;}
+.bdg-h{background:#0a2240;color:#5aaeff;border:.5px solid #1a4070;}
+.bdg-r{background:#1e1400;color:#d4943a;border:.5px solid #3a2800;}
+.bdg-x{background:#220a14;color:#d45a80;border:.5px solid #3a1028;}
+.bdg-c{background:#181818;color:#777;border:.5px solid #2a2a2a;}
+.bdg-u{background:#0a1a14;color:#4ecb8a;border:.5px solid #1a3a2a;}
+
+/* CARD ROW */
+.crow{background:var(--card);border:.5px solid var(--bord);border-radius:var(--r);margin:0 12px 7px;padding:9px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s;}
+.crow:active{background:var(--card2);}
+.cthumb{width:36px;height:50px;border-radius:5px;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--card2);}
+.cthumb img{width:100%;height:100%;object-fit:cover;}
+.cinfo{flex:1;min-width:0;}
+.cname{font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.csub{font-size:11px;color:var(--t2);margin-bottom:3px;}
+.pblue{color:var(--acc);font-weight:600;}
+.pgreen{color:var(--green);font-weight:600;}
+.pamber{color:var(--amber);font-weight:600;}
+/* Bouton + rapide dans les listes */
+.quick-add{width:30px;height:30px;border-radius:50%;background:transparent;border:.5px solid var(--bord2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--acc);font-size:17px;flex-shrink:0;transition:all .15s;}
+.quick-add:active{background:var(--acc);color:#fff;transform:scale(.9);}
+.quick-add.owned{border-color:var(--green);color:var(--green);}
+.quick-add.owned:active{background:var(--green);color:#fff;}
+.row-end{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+/* Contrôle quantité dans la collection */
+.qty-ctrl{display:flex;align-items:center;gap:4px;background:var(--card2);border-radius:20px;padding:2px;}
+.qty-btn{width:22px;height:22px;border-radius:50%;background:transparent;border:none;color:var(--t2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--fb);}
+.qty-btn:active{background:var(--bord2);color:var(--t1);}
+.qty-num{font-size:12px;font-weight:700;color:var(--t1);min-width:18px;text-align:center;font-family:var(--fd);}
+.qty-badge{font-size:10px;font-weight:700;color:var(--acc);background:#0a2240;padding:1px 6px;border-radius:10px;font-family:var(--fd);}
+
+/* HOME */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px 12px 4px;}
+.mcard{background:var(--card);border:.5px solid var(--bord);border-radius:var(--rs);padding:10px 12px;}
+.mlab{font-size:10px;color:var(--t3);margin-bottom:4px;}
+.mval{font-family:var(--fd);font-size:21px;font-weight:700;color:var(--t1);line-height:1;}
+.mval.g{color:var(--green);}
+.mval.r{color:var(--red);}
+.trow{background:var(--card);border:.5px solid var(--bord);border-radius:var(--r);margin:0 12px 7px;padding:9px 12px;display:flex;align-items:center;gap:10px;}
+.tico{width:32px;height:32px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tico.up{background:#081a0e;color:var(--green);}
+.tico.dn{background:#1a0608;color:var(--red);}
+.tico i{font-size:17px;}
+
+/* SEARCH BAR */
+.sbar-wrap{padding:10px 12px 0;}
+.sbar{background:var(--card);border:.5px solid var(--bord);border-radius:var(--rs);padding:8px 12px;display:flex;align-items:center;gap:8px;}
+.sbar i{font-size:16px;color:var(--t3);flex-shrink:0;}
+.sbar input{background:none;border:none;outline:none;font-family:var(--fb);font-size:13px;color:var(--t1);flex:1;min-width:0;}
+.sbar input::placeholder{color:var(--t3);}
+
+/* FILTERS */
+.frow{display:flex;gap:5px;padding:7px 12px 9px;overflow-x:auto;scrollbar-width:none;}
+.frow::-webkit-scrollbar{display:none;}
+.fpill{font-size:11px;padding:4px 11px;border-radius:20px;white-space:nowrap;cursor:pointer;font-weight:500;border:none;font-family:var(--fb);transition:all .15s;}
+.fpill.on{background:var(--acc);color:#fff;}
+.fpill:not(.on){background:var(--card);color:var(--t2);border:.5px solid var(--bord);}
+
+/* SCANNER */
+.cambox{position:relative;margin:10px 12px 0;border-radius:var(--r);overflow:hidden;background:#000;aspect-ratio:3/4;max-height:260px;}
+#cam-video{width:100%;height:100%;object-fit:cover;display:block;}
+.cam-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+.cam-frame{width:68%;aspect-ratio:2.5/3.5;border:2px solid var(--acc);border-radius:10px;position:relative;box-shadow:0 0 0 9999px rgba(0,0,0,.5);}
+.cam-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--acc),transparent);animation:camscan 2s ease-in-out infinite;}
+@keyframes camscan{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+.cam-hint{color:rgba(255,255,255,.7);font-size:11px;margin-top:10px;text-align:center;}
+.cam-acts{display:flex;gap:8px;padding:8px 12px 4px;}
+.cbtn{display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:var(--rs);font-size:13px;font-weight:600;font-family:var(--fd);letter-spacing:.04em;cursor:pointer;border:none;transition:opacity .15s;}
+.cbtn:active{opacity:.8;}
+.cbtn-p{background:var(--acc);color:#fff;flex:1;justify-content:center;}
+.cbtn-s{background:var(--card);color:var(--t2);border:.5px solid var(--bord);padding:10px 14px;}
+.cbtn i{font-size:17px;}
+.ocr-box{margin:0 12px 6px;padding:10px 12px;background:var(--card);border:.5px solid var(--bord);border-radius:var(--rs);font-size:12px;color:var(--t2);display:none;}
+.ocr-box.show{display:flex;align-items:center;gap:8px;}
+.ocr-prog{height:3px;background:var(--bord);border-radius:2px;margin-top:5px;overflow:hidden;}
+.ocr-bar{height:100%;background:var(--acc);border-radius:2px;transition:width .3s;}
+.mode-tog{display:flex;margin:10px 12px 0;background:var(--card);border:.5px solid var(--bord);border-radius:var(--rs);padding:3px;gap:3px;}
+.modbtn{flex:1;padding:7px;border-radius:6px;font-size:11px;font-weight:500;text-align:center;cursor:pointer;border:none;font-family:var(--fb);transition:all .15s;color:var(--t3);background:transparent;}
+.modbtn.on{background:var(--acc);color:#fff;}
+
+/* COLLECTION */
+.cstats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 12px 4px;}
+.cstat{background:var(--card);border:.5px solid var(--bord);border-radius:var(--rs);padding:9px 10px;text-align:center;}
+.cstat-v{font-family:var(--fd);font-size:18px;font-weight:700;line-height:1;}
+.cstat-v.b{color:var(--acc);}
+.cstat-v.g{color:var(--green);}
+.cstat-l{font-size:9px;color:var(--t3);margin-top:3px;}
+.sort-row{display:flex;gap:5px;padding:4px 12px 8px;overflow-x:auto;scrollbar-width:none;}
+.sort-row::-webkit-scrollbar{display:none;}
+.spill{font-size:10px;padding:4px 10px;border-radius:20px;white-space:nowrap;cursor:pointer;font-weight:500;border:none;font-family:var(--fb);transition:all .15s;}
+.spill.on{background:var(--bord2);color:var(--t1);}
+.spill:not(.on){background:transparent;color:var(--t3);border:.5px solid var(--bord);}
+.ccrow{background:var(--card);border:.5px solid var(--bord);border-radius:var(--r);margin:0 12px 6px;padding:9px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.ccrow:active{background:var(--card2);}
+.cc-thumb{width:36px;height:50px;border-radius:5px;flex-shrink:0;overflow:hidden;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.cc-thumb img{width:100%;height:100%;object-fit:cover;}
+.cc-info{flex:1;min-width:0;}
+.cc-name{font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px;}
+.cc-sub{font-size:10px;color:var(--t2);margin-bottom:3px;}
+.cc-prices{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.cc-p{font-size:10px;font-weight:600;color:var(--acc);}
+.cc-p10{font-size:9px;padding:1px 5px;border-radius:10px;font-weight:700;background:#061a0a;color:#4ecb8a;}
+.cc-p9{font-size:9px;padding:1px 5px;border-radius:10px;font-weight:700;background:#1a1000;color:#e0a030;}
+.cc-del{width:28px;height:28px;border-radius:50%;background:transparent;border:.5px solid var(--bord);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-size:13px;flex-shrink:0;}
+.cc-del:active{background:#1a0608;color:var(--red);}
+.grp-hd{padding:7px 16px 3px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;display:flex;justify-content:space-between;}
+.grp-hd span{color:var(--acc);}
+.coll-empty{text-align:center;padding:36px 20px;}
+.coll-empty i{font-size:44px;display:block;margin-bottom:10px;opacity:.25;}
+.coll-empty-t{font-size:14px;font-weight:500;color:var(--t2);margin-bottom:5px;}
+.coll-empty-s{font-size:12px;color:var(--t3);line-height:1.5;}
+
+/* HISTORY */
+.chart-card{margin:0 12px 10px;background:var(--card);border:.5px solid var(--bord);border-radius:var(--r);padding:14px;}
+.chart-hd{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.chart-val{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--acc);margin-bottom:12px;}
+.chart-delta{font-size:11px;font-weight:600;margin-left:6px;}
+.chart-lbs{display:flex;justify-content:space-between;margin-top:4px;}
+.chart-lb{font-size:9px;color:var(--t3);}
+.hist-table{margin:0 12px 8px;background:var(--card);border:.5px solid var(--bord);border-radius:var(--r);overflow:hidden;}
+.hist-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:.5px solid var(--bord);font-size:12px;}
+.hist-row:last-child{border:none;}
+.hist-date{color:var(--t2);}
+.hist-val{font-weight:600;}
+.hist-diff.up{color:var(--green);}
+.hist-diff.dn{color:var(--red);}
+.hist-diff.fl{color:var(--t3);}
+.snap-btn{display:block;margin:10px auto;background:var(--acc);color:#fff;border:none;border-radius:var(--rs);padding:10px 20px;font-size:12px;font-weight:600;font-family:var(--fd);letter-spacing:.04em;cursor:pointer;}
+
+/* BASE */
+.set-sec{margin:0 12px 3px;}
+.set-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px;cursor:pointer;}
+.set-nm{font-size:13px;font-weight:600;color:var(--t1);}
+.set-mt{font-size:11px;color:var(--t3);}
+.set-list{display:none;}
+.set-list.open{display:block;}
+
+/* DECKS */
+.dcard{background:var(--card);border:.5px solid var(--bord);border-radius:var(--r);margin:0 12px 7px;padding:13px;}
+.dhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.dnm{font-size:14px;font-weight:500;color:var(--t1);}
+.vrow{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.vlab{font-size:11px;color:var(--t3);min-width:52px;}
+.vbar{flex:1;height:5px;background:var(--bord);border-radius:3px;overflow:hidden;}
+.vfill{height:100%;background:var(--acc);border-radius:3px;}
+.vpct{font-size:12px;font-weight:600;color:var(--acc);min-width:34px;text-align:right;}
+.dmeta{font-size:11px;color:var(--t2);}
+.dalert{font-size:11px;color:var(--red);margin-top:5px;display:flex;align-items:center;gap:4px;}
+.dsug{margin:0 12px 8px;border:.5px dashed var(--bord2);border-radius:var(--r);padding:16px 14px;text-align:center;}
+.dsug i{font-size:26px;color:var(--acc);display:block;margin-bottom:9px;}
+.dsug-t{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:4px;}
+.dsug-s{font-size:11px;color:var(--t2);margin-bottom:12px;}
+.dsug-btn{background:var(--acc);color:#fff;border:none;border-radius:var(--rs);padding:9px 20px;font-size:12px;font-weight:600;font-family:var(--fd);cursor:pointer;}
+
+/* OVERLAY */
+.ov{position:fixed;inset:0;z-index:100;background:rgba(7,12,24,.93);display:flex;flex-direction:column;backdrop-filter:blur(8px);transform:translateY(100%);transition:transform .3s cubic-bezier(.16,1,.3,1);}
+.ov.open{transform:translateY(0);}
+.ov-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:.5px solid var(--bord);}
+.ov-title{font-family:var(--fd);font-size:17px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ov-close{width:30px;height:30px;border-radius:50%;background:var(--card);border:.5px solid var(--bord);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-size:16px;flex-shrink:0;}
+.ov-body{flex:1;overflow-y:auto;padding:14px;scrollbar-width:none;}
+.ov-body::-webkit-scrollbar{display:none;}
+.ov-img{width:150px;height:210px;margin:0 auto 14px;display:block;border-radius:10px;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(61,142,255,.2));}
+.ov-img-ph{width:150px;height:210px;margin:0 auto 14px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:60px;}
+.ov-card{background:var(--card);border:.5px solid var(--bord);border-radius:var(--r);padding:13px;margin-bottom:10px;}
+.ov-card-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:.5px solid var(--bord);}
+.ov-avg{text-align:right;}
+.ov-avg-v{font-family:var(--fd);font-size:19px;font-weight:700;color:var(--acc);line-height:1;}
+.ov-avg-l{font-size:10px;color:var(--t3);margin-top:2px;}
+.ptable{width:100%;}
+.ptable tr{border-bottom:.5px solid var(--bord);}
+.ptable tr:last-child{border:none;}
+.ptable td{padding:6px 0;font-size:12px;}
+.ptable td:first-child{color:var(--t2);}
+.ptable td:last-child{text-align:right;}
+.psa-bl{margin-top:9px;padding-top:9px;border-top:.5px solid var(--bord);}
+.psa-t{font-size:9.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;display:flex;align-items:center;gap:4px;}
+.psa-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--bord);}
+.psa-row:last-child{border:none;}
+.psa-l{display:flex;align-items:center;gap:8px;}
+.psa-b{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:var(--fd);}
+.p10{background:#061a0a;color:#4ecb8a;border:.5px solid #124a22;}
+.p9{background:#1a1000;color:#e0a030;border:.5px solid #4a3000;}
+.psa-gn{font-size:11px;color:var(--t2);}
+.add-btn{width:100%;margin-top:11px;padding:9px;background:transparent;border:.5px solid var(--bord2);border-radius:var(--rs);color:var(--acc);font-size:12px;font-weight:500;font-family:var(--fb);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.add-btn:active{background:var(--card2);}
+
+/* CONFIRM */
+#dlg{display:none;position:fixed;inset:0;z-index:300;background:rgba(7,12,24,.9);align-items:center;justify-content:center;}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(68px + var(--sb));left:50%;transform:translateX(-50%) translateY(14px);background:var(--card2);border:.5px solid var(--bord2);border-radius:var(--rs);padding:9px 16px;font-size:12px;color:var(--t1);display:flex;align-items:center;gap:7px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:200;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast i{color:var(--green);font-size:15px;}
+
+/* UTILS */
+.spin{display:flex;align-items:center;justify-content:center;padding:28px;gap:10px;color:var(--t3);font-size:13px;}
+.spinico{width:16px;height:16px;border:2px solid var(--bord);border-top-color:var(--acc);border-radius:50%;animation:ro .8s linear infinite;flex-shrink:0;}
+@keyframes ro{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:28px 16px;color:var(--t3);font-size:12px;}
+.empty i{font-size:28px;display:block;margin-bottom:7px;opacity:.4;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-ico"><i class="ti ti-device-gamepad-2"></i></div>
+    <span class="logo-txt">Poke<span>Deck</span> Scout</span>
+  </div>
+  <div class="top-acts">
+    <div style="position:relative;"><i class="ti ti-bell"></i><div style="width:7px;height:7px;background:var(--red);border-radius:50%;position:absolute;top:-1px;right:-1px;"></div></div>
+    <i class="ti ti-settings"></i>
+  </div>
+</div>
+
+<div class="ticker-zone">
+  <div class="ticker-pin">
+    <span class="ticker-pin-tag"><i class="ti ti-pin" style="font-size:9px;"></i> À la une</span>
+    <span class="ticker-pin-txt" id="pin-txt">Chargement...</span>
+    <span class="ticker-pin-time" id="pin-time"></span>
+  </div>
+  <div class="ticker-wrap">
+    <div class="ticker-track" id="ticker-track">
+      <div class="ticker-item"><span class="ticker-tag" style="color:#3d8eff;">TCG</span><span class="ticker-txt">Chargement des actualités...</span><span class="ticker-time"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen">
+
+  <!-- HOME -->
+  <div class="page active" id="p-home">
+    <div class="ptitle">Bonjour, Dresseur <span style="font-size:11px;font-weight:400;color:var(--t3);" id="hdate"></span></div>
+    <div class="mgrid">
+      <div class="mcard"><div class="mlab">Valeur collection</div><div class="mval" id="h-val">0 €</div></div>
+      <div class="mcard"><div class="mlab">Cartes possédées</div><div class="mval" id="h-cnt">0</div></div>
+      <div class="mcard"><div class="mlab">Variation 7 jours</div><div class="mval" id="h-d7">—</div></div>
+      <div class="mcard"><div class="mlab">Sets disponibles</div><div class="mval" id="h-sets">—</div></div>
+    </div>
+    <div class="plabel"><i class="ti ti-chart-line"></i> Évolution</div>
+    <div class="chart-card">
+      <div class="chart-hd">Valeur de la collection</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px;">
+        <span class="chart-val" id="h-cv">0 €</span>
+        <span class="chart-delta" id="h-cd"></span>
+      </div>
+      <canvas id="cv-sm" style="width:100%;height:90px;display:block;"></canvas>
+      <div class="chart-lbs" id="cl-sm"></div>
+    </div>
+    <div class="plabel"><i class="ti ti-trophy"></i> Top cartes de ma collection</div>
+    <div id="h-top"></div>
+    <div class="plabel"><i class="ti ti-clock"></i> Ajouts récents</div>
+    <div id="h-recent"></div>
+  </div>
+
+  <!-- SCANNER -->
+  <div class="page" id="p-scan">
+    <div class="ptitle">Scanner</div>
+    <div class="mode-tog">
+      <button class="modbtn on" id="mb-cam" onclick="setMode('cam')"><i class="ti ti-camera" style="font-size:12px;margin-right:4px;vertical-align:-1px;"></i>Caméra OCR</button>
+      <button class="modbtn" id="mb-txt" onclick="setMode('txt')"><i class="ti ti-search" style="font-size:12px;margin-right:4px;vertical-align:-1px;"></i>Recherche texte</button>
+    </div>
+    <div id="m-cam">
+      <div class="cambox"><video id="cam-video" autoplay playsinline muted></video><canvas id="cam-cv" style="display:none;"></canvas><div class="cam-ov"><div class="cam-frame"><div class="cam-line"></div></div><div class="cam-hint">Centre le nom dans le cadre</div></div></div>
+      <div class="cam-acts">
+        <button class="cbtn cbtn-s" onclick="flipCam()"><i class="ti ti-camera-rotate"></i></button>
+        <button class="cbtn cbtn-p" id="scan-btn" onclick="doScan()"><i class="ti ti-camera"></i> Scanner</button>
+        <button class="cbtn cbtn-s" onclick="document.getElementById('file-in').click()"><i class="ti ti-photo"></i></button>
+      </div>
+      <input type="file" id="file-in" accept="image/*" style="display:none;" onchange="onFile(event)">
+      <div class="ocr-box" id="ocr-box"><i class="ti ti-loader spinico" id="ocr-ico"></i><div style="flex:1;"><div id="ocr-msg">Analyse...</div><div class="ocr-prog"><div class="ocr-bar" id="ocr-bar" style="width:0%"></div></div></div></div>
+      <div id="cam-res"></div>
+    </div>
+    <div id="m-txt" style="display:none;">
+      <div class="sbar-wrap">
+        <div class="sbar">
+          <i class="ti ti-search"></i>
+          <input type="text" id="s-input" placeholder="Nom de la carte (ex: Pikachu)..." autocomplete="off" spellcheck="false">
+          <i class="ti ti-x" id="s-clear" style="cursor:pointer;display:none;color:var(--t3);" onclick="clearSearch()"></i>
+        </div>
+      </div>
+      <div style="padding:5px 12px 2px;font-size:10px;color:var(--t3);">Base PokéTCG · Prix TCGPlayer inclus</div>
+      <div id="s-res"><div class="empty"><i class="ti ti-search"></i>Tape au moins 2 lettres</div></div>
+    </div>
+  </div>
+
+  <!-- COLLECTION -->
+  <div class="page" id="p-coll">
+    <div class="ptitle">Ma Collection
+      <div style="display:flex;gap:7px;">
+        <button onclick="exportColl()" style="background:transparent;border:.5px solid var(--bord);border-radius:var(--rs);padding:4px 9px;font-size:11px;color:var(--t2);cursor:pointer;font-family:var(--fb);"><i class="ti ti-download" style="font-size:11px;vertical-align:-1px;margin-right:3px;"></i>Export</button>
+        <button onclick="confirmClear()" style="background:transparent;border:.5px solid var(--red);border-radius:var(--rs);padding:4px 8px;font-size:11px;color:var(--red);cursor:pointer;font-family:var(--fb);"><i class="ti ti-trash" style="font-size:11px;vertical-align:-1px;"></i></button>
+      </div>
+    </div>
+    <div class="cstats">
+      <div class="cstat"><div class="cstat-v b" id="c-tot">0 €</div><div class="cstat-l">Valeur</div></div>
+      <div class="cstat"><div class="cstat-v" id="c-cnt">0</div><div class="cstat-l">Cartes</div></div>
+      <div class="cstat"><div class="cstat-v g" id="c-top">—</div><div class="cstat-l">+ chère</div></div>
+    </div>
+    <div class="sbar-wrap">
+      <div class="sbar">
+        <i class="ti ti-search"></i>
+        <input type="text" id="c-search" placeholder="Filtrer ma collection..." autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="sort-row">
+      <button class="spill on" onclick="setSort(this,'recent')"><i class="ti ti-clock" style="font-size:10px;margin-right:2px;"></i>Récents</button>
+      <button class="spill" onclick="setSort(this,'pd')"><i class="ti ti-arrow-down" style="font-size:10px;margin-right:2px;"></i>Prix ↓</button>
+      <button class="spill" onclick="setSort(this,'pa')"><i class="ti ti-arrow-up" style="font-size:10px;margin-right:2px;"></i>Prix ↑</button>
+      <button class="spill" onclick="setSort(this,'name')">A–Z</button>
+      <button class="spill" onclick="setSort(this,'set')">Par set</button>
+    </div>
+    <div id="c-list"></div>
+  </div>
+
+  <!-- HISTORIQUE -->
+  <div class="page" id="p-hist">
+    <div class="ptitle">Historique</div>
+    <div class="chart-card">
+      <div class="chart-hd">Valeur totale</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:12px;">
+        <span class="chart-val" id="hv-now">0 €</span>
+        <span class="chart-delta" id="hv-d30"></span>
+      </div>
+      <canvas id="cv-lg" style="width:100%;height:130px;display:block;"></canvas>
+      <div class="chart-lbs" id="cl-lg"></div>
+    </div>
+    <div class="plabel"><i class="ti ti-history"></i> Journal</div>
+    <div id="hist-list"></div>
+    <button class="snap-btn" onclick="snapshot(false)"><i class="ti ti-camera" style="font-size:14px;vertical-align:-1px;margin-right:5px;"></i>Enregistrer snapshot</button>
+  </div>
+
+  <!-- BASE -->
+  <div class="page" id="p-base">
+    <div class="ptitle">Base de données <span style="font-size:12px;font-weight:400;color:var(--t3);" id="sets-lbl">...</span></div>
+    <div class="sbar-wrap">
+      <div class="sbar">
+        <i class="ti ti-search"></i>
+        <input type="text" id="b-search" placeholder="Rechercher un set..." autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="frow" id="era-row">
+      <button class="fpill on" onclick="eraFilt(this,'')">Tous</button>
+      <button class="fpill" onclick="eraFilt(this,'Scarlet & Violet')">Écarlate & Violet</button>
+      <button class="fpill" onclick="eraFilt(this,'Sword & Shield')">Épée & Bouclier</button>
+      <button class="fpill" onclick="eraFilt(this,'Sun & Moon')">Soleil & Lune</button>
+      <button class="fpill" onclick="eraFilt(this,'XY')">XY</button>
+      <button class="fpill" onclick="eraFilt(this,'Black & White')">Noir & Blanc</button>
+    </div>
+    <div id="sets-list"><div class="spin"><div class="spinico"></div> Chargement...</div></div>
+  </div>
+
+  <!-- DECKS -->
+  <div class="page" id="p-deck">
+    <div class="ptitle">Mes decks</div>
+    <div class="dcard"><div class="dhd"><span class="dnm">Charizard ex Control</span><span class="bdg bdg-x">Compétitif</span></div><div class="vrow"><span class="vlab">Viabilité</span><div class="vbar"><div class="vfill" style="width:82%;"></div></div><span class="vpct">82 %</span></div><div class="dmeta">60 cartes · 312 € estimé</div><div class="dalert"><i class="ti ti-alert-circle"></i> Il te manque 2 × Rare Candy</div></div>
+    <div class="dcard"><div class="dhd"><span class="dnm">Pikachu VMAX Aggro</span><span class="bdg bdg-h">Casual</span></div><div class="vrow"><span class="vlab">Viabilité</span><div class="vbar"><div class="vfill" style="width:64%;"></div></div><span class="vpct">64 %</span></div><div class="dmeta">60 cartes · 98 € estimé</div></div>
+    <div class="dcard"><div class="dhd"><span class="dnm">Gardevoir ex Psychic</span><span class="bdg bdg-x">Compétitif</span></div><div class="vrow"><span class="vlab">Viabilité</span><div class="vbar"><div class="vfill" style="width:75%;"></div></div><span class="vpct">75 %</span></div><div class="dmeta">60 cartes · 230 € estimé</div><div class="dalert"><i class="ti ti-alert-circle"></i> Il te manque 1 × Kirlia (Refinement)</div></div>
+    <div class="plabel"><i class="ti ti-wand"></i> Suggestion IA</div>
+    <div class="dsug"><i class="ti ti-sparkles"></i><div class="dsug-t">Générer un deck depuis ma collection</div><div class="dsug-s">L'IA construit le deck optimal avec tes cartes</div><button class="dsug-btn" onclick="toast('Génération en cours...')">Suggérer un deck</button></div>
+  </div>
+
+</div><!-- /screen -->
+
+<div class="tabbar">
+  <button class="tabbtn on" data-p="home" onclick="goTab('home')"><i class="ti ti-home"></i><span>Accueil</span></button>
+  <button class="tabbtn" data-p="scan" onclick="goTab('scan')"><i class="ti ti-camera"></i><span>Scanner</span></button>
+  <button class="tabbtn" data-p="coll" onclick="goTab('coll')"><i class="ti ti-stack-2"></i><span>Collection</span></button>
+  <button class="tabbtn" data-p="hist" onclick="goTab('hist')"><i class="ti ti-chart-line"></i><span>Historique</span></button>
+  <button class="tabbtn" data-p="base" onclick="goTab('base')"><i class="ti ti-database"></i><span>Base</span></button>
+  <button class="tabbtn" data-p="deck" onclick="goTab('deck')"><i class="ti ti-cards"></i><span>Decks</span></button>
+</div>
+</div>
+
+<!-- OVERLAY -->
+<div class="ov" id="ov">
+  <div class="ov-hd"><span class="ov-title" id="ov-title">Carte</span><div class="ov-close" onclick="closeOv()"><i class="ti ti-x"></i></div></div>
+  <div class="ov-body" id="ov-body"></div>
+</div>
+
+<!-- CONFIRM -->
+<div id="dlg" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(7,12,24,.9);align-items:center;justify-content:center;">
+  <div style="background:var(--card);border:.5px solid var(--bord);border-radius:var(--r);padding:20px;margin:16px;max-width:300px;width:100%;">
+    <div style="font-size:15px;font-weight:600;margin-bottom:8px;" id="dlg-t">Confirmer</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:16px;" id="dlg-m"></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeDlg()" style="flex:1;padding:9px;background:transparent;border:.5px solid var(--bord);border-radius:var(--rs);color:var(--t2);font-size:13px;cursor:pointer;font-family:var(--fb);">Annuler</button>
+      <button id="dlg-ok" style="flex:1;padding:9px;background:var(--red);border:none;border-radius:var(--rs);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--fb);">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"><i class="ti ti-check" id="toast-ico"></i><span id="toast-msg"></span></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CONFIG & STATE
+// ════════════════════════════════════════════════════════
+const PKAPI = 'https://api.pokemontcg.io/v2';
+// Proxies CORS fonctionnels depuis un fichier local (corsproxy.io est désormais limité à localhost)
+const PROXIES = [
+  u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u),
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+];
+let corsOk = 0; // index proxy actif
+
+async function pkFetch(path) {
+  const url = PKAPI + path;
+  for (let t = 0; t < PROXIES.length; t++) {
+    const idx = (corsOk + t) % PROXIES.length;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12000); // timeout 12s
+    try {
+      const r = await fetch(PROXIES[idx](url), { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (r.ok) {
+        const txt = await r.text();
+        const data = JSON.parse(txt);
+        corsOk = idx;
+        return { ok: true, json: async () => data };
+      }
+    } catch(e) {
+      clearTimeout(timer);
+      /* essaie le proxy suivant */
+    }
+  }
+  throw new Error('API inaccessible');
+}
+
+// Construit une query string correctement encodée pour l'API (espaces, guillemets…).
+// La valeur de q est encodée une seule fois ici ; le proxy réencode ensuite l'URL
+// entière puis la décode avant de la transmettre à l'API → encodage final correct.
+function buildQ(lucene, size, order = '-set.releaseDate') {
+  return 'q=' + encodeURIComponent(lucene) + '&pageSize=' + size + '&orderBy=' + order;
+}
+
+// ── Chargement sécurisé du localStorage (résiste aux données corrompues) ──
+function loadLS(key, fallback) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) || 'null');
+    return Array.isArray(v) ? v : fallback;
+  } catch(e) { return fallback; }
+}
+let coll = loadLS('pds_c', []);
+let hist = loadLS('pds_h', []);
+let allSets = [];
+let era = '';
+let csort = 'recent';
+let cfilt = '';
+let stimer = null;
+let camStream = null;
+let facing = 'environment';
+let ocrReady = false;
+let ocrWorker = null;
+let scanMode = 'cam';
+
+// ════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════
+function price(card) {
+  const p = card.tcgplayer?.prices;
+  if (!p) return null;
+  const v = p.holofoil?.market || p.reverseHolofoil?.market || p.normal?.market
+          || p.holofoil?.mid || p.normal?.mid || null;
+  return v ? Math.round(v * 100) / 100 : null;
+}
+
+function psa(raw, rar) {
+  if (!raw) return null;
+  const r = (rar || '').toLowerCase();
+  let m10, m9;
+  if (r.includes('secret') || r.includes('rainbow') || r.includes('alternate')) { m10=9; m9=4; }
+  else if (r.includes('illustration') || r.includes('special')) { m10=8; m9=3.5; }
+  else if (r.includes('double rare') || r.includes('ultra')) { m10=7; m9=3; }
+  else if (r.includes('holo')) { m10=6; m9=2.5; }
+  else if (r.includes('rare')) { m10=5; m9=2.2; }
+  else { m10=4; m9=2; }
+  return { p10: +(raw*m10).toFixed(2), p9: +(raw*m9).toFixed(2) };
+}
+
+function fp(v) { return v == null ? '—' : v.toFixed(2).replace('.', ',') + ' €'; }
+
+function badge(rar) {
+  const r = (rar || '').toLowerCase();
+  if (r.includes('secret') || r.includes('rainbow') || r.includes('full art')) return '<span class="bdg bdg-x">Secret Rare</span>';
+  if (r.includes('double rare') || r.includes('ultra')) return '<span class="bdg bdg-x">Double Rare</span>';
+  if (r.includes('illustration')) return '<span class="bdg bdg-x">Illus. Rare</span>';
+  if (r.includes('holo')) return '<span class="bdg bdg-h">Holo Rare</span>';
+  if (r.includes('rare')) return '<span class="bdg bdg-r">Rare</span>';
+  if (r.includes('uncommon')) return '<span class="bdg bdg-u">Peu Commune</span>';
+  return '<span class="bdg bdg-c">Commune</span>';
+}
+
+function emoji(types) {
+  const m = {Fire:'🔥',Water:'💧',Grass:'🍃',Electric:'⚡',Psychic:'🌀',Fighting:'👊',Darkness:'🌑',Metal:'⚙️',Dragon:'🐉',Fairy:'✨',Colorless:'⭐'};
+  return m[(types||[])[0]] || '🃏';
+}
+
+function totalVal() { return coll.reduce((s,c) => s + (price(c)||0) * (c.qty||1), 0); }
+function totalCards() { return coll.reduce((s,c) => s + (c.qty||1), 0); }
+
+function save() {
+  try { localStorage.setItem('pds_c', JSON.stringify(coll)); }
+  catch(e) { toast('Stockage plein — impossible de sauvegarder', 'ti-alert-circle'); }
+}
+function saveH() {
+  try { localStorage.setItem('pds_h', JSON.stringify(hist)); }
+  catch(e) { /* historique non critique */ }
+}
+
+// ── SÉCURITÉ : échappement HTML contre les injections XSS ──
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ── Registre de cartes : évite d'injecter du JSON dans onclick ──
+// Les cartes affichées sont stockées par id, et on passe juste l'id (sûr) aux handlers.
+const cardRegistry = new Map();
+function regCard(card) { cardRegistry.set(card.id, card); return card.id; }
+function getCard(id) { return cardRegistry.get(id) || coll.find(c => c.id === id); }
+
+// ════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════
+function goTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('on'));
+  document.getElementById('p-' + name).classList.add('active');
+  document.querySelector('[data-p="' + name + '"]').classList.add('on');
+  document.querySelector('.screen').scrollTop = 0;
+  if (name === 'home') { renderHome(); drawChart('cv-sm','cl-sm',14); }
+  if (name === 'coll') renderColl();
+  if (name === 'hist') { renderHist(); setTimeout(() => drawChart('cv-lg','cl-lg',60), 50); }
+  if (name === 'base' && allSets.length === 0) loadSets();
+  if (name === 'scan') startCam();
+  else stopCam();
+}
+
+// ════════════════════════════════════════════════════════
+// TOAST / CONFIRM
+// ════════════════════════════════════════════════════════
+let tTimer;
+function toast(msg, ico = 'ti-check') {
+  const el = document.getElementById('toast-el');
+  document.getElementById('toast-ico').className = 'ti ' + ico;
+  document.getElementById('toast-msg').textContent = msg;
+  el.classList.add('show');
+  clearTimeout(tTimer);
+  tTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+let dlgCb = null;
+function showDlg(title, msg, cb) {
+  document.getElementById('dlg-t').textContent = title;
+  document.getElementById('dlg-m').textContent = msg;
+  dlgCb = cb;
+  document.getElementById('dlg').style.display = 'flex';
+}
+function closeDlg() { document.getElementById('dlg').style.display = 'none'; dlgCb = null; }
+document.getElementById('dlg-ok').onclick = () => { if (dlgCb) dlgCb(); closeDlg(); };
+
+// ════════════════════════════════════════════════════════
+// OVERLAY CARD DETAIL
+// ════════════════════════════════════════════════════════
+function openOvById(id) { const c = getCard(id); if (c) openOv(c); }
+function openOv(card) {
+  document.getElementById('ov-title').textContent = card.name;
+  const pr = price(card);
+  const ps = psa(pr, card.rarity);
+  const img = card.images?.large || card.images?.small || '';
+  const inC = coll.some(c => c.id === card.id);
+  regCard(card);
+
+  document.getElementById('ov-body').innerHTML = `
+    ${img ? `<img class="ov-img" src="${esc(img)}" alt="${esc(card.name)}" loading="lazy">` : `<div class="ov-img-ph">${emoji(card.types)}</div>`}
+    <div class="ov-card">
+      <div class="ov-card-hd">
+        <div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:3px;">${esc(card.name)}</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;">${esc(card.set?.name||'')} · ${esc(card.number||'')}/${esc(card.set?.printedTotal||'?')}</div>
+          ${badge(card.rarity)}
+        </div>
+        <div class="ov-avg"><div class="ov-avg-v">${fp(pr)}</div><div class="ov-avg-l">TCGPlayer moy.</div></div>
+      </div>
+      <table class="ptable">
+        ${card.tcgplayer?.prices?.normal ? `<tr><td>Normal</td><td class="pblue">${fp(card.tcgplayer.prices.normal.market||card.tcgplayer.prices.normal.mid)}</td></tr>` : ''}
+        ${card.tcgplayer?.prices?.holofoil ? `<tr><td>Holofoil</td><td class="pblue">${fp(card.tcgplayer.prices.holofoil.market||card.tcgplayer.prices.holofoil.mid)}</td></tr>` : ''}
+        ${card.tcgplayer?.prices?.reverseHolofoil ? `<tr><td>Rev. Holo</td><td class="pblue">${fp(card.tcgplayer.prices.reverseHolofoil.market||card.tcgplayer.prices.reverseHolofoil.mid)}</td></tr>` : ''}
+        ${!card.tcgplayer?.prices ? '<tr><td colspan="2" style="color:var(--t3);font-style:italic;">Prix non disponibles</td></tr>' : ''}
+      </table>
+      ${ps ? `<div class="psa-bl"><div class="psa-t"><i class="ti ti-certificate"></i> Cotes PSA — estimations</div>
+        <div class="psa-row"><div class="psa-l"><span class="psa-b p10">PSA 10</span><span class="psa-gn">Gem Mint</span></div><span class="pgreen">${fp(ps.p10)}</span></div>
+        <div class="psa-row"><div class="psa-l"><span class="psa-b p9">PSA 9</span><span class="psa-gn">Mint</span></div><span class="pamber">${fp(ps.p9)}</span></div>
+      </div>` : ''}
+      ${inC
+        ? `<button class="add-btn" style="color:var(--red);border-color:var(--red);" onclick="removeCard('${esc(card.id)}');closeOv()"><i class="ti ti-trash"></i> Retirer de la collection</button>`
+        : `<button class="add-btn" onclick="addCardById('${esc(card.id)}')"><i class="ti ti-circle-plus"></i> Ajouter à ma collection</button>`
+      }
+    </div>
+    <div class="ov-card" style="margin-bottom:0;">
+      <div class="psa-t" style="margin-bottom:9px;"><i class="ti ti-info-circle"></i> Informations</div>
+      <table class="ptable">
+        <tr><td>Set</td><td style="text-align:right;color:var(--t1);">${esc(card.set?.name||'—')}</td></tr>
+        <tr><td>Série</td><td style="text-align:right;color:var(--t1);">${esc(card.set?.series||'—')}</td></tr>
+        <tr><td>Numéro</td><td style="text-align:right;color:var(--t1);">${esc(card.number||'—')}/${esc(card.set?.printedTotal||'?')}</td></tr>
+        <tr><td>Rareté</td><td style="text-align:right;color:var(--t1);">${esc(card.rarity||'—')}</td></tr>
+        <tr><td>Type(s)</td><td style="text-align:right;color:var(--t1);">${esc((card.types||['—']).join(', '))}</td></tr>
+        ${card.hp ? `<tr><td>PV</td><td style="text-align:right;color:var(--t1);">${esc(card.hp)}</td></tr>` : ''}
+        <tr><td>Artiste</td><td style="text-align:right;color:var(--t1);">${esc(card.artist||'—')}</td></tr>
+      </table>
+    </div>
+  `;
+  document.getElementById('ov').classList.add('open');
+}
+function closeOv() { document.getElementById('ov').classList.remove('open'); }
+
+// ════════════════════════════════════════════════════════
+// COLLECTION CRUD
+// ════════════════════════════════════════════════════════
+function addCardById(id) { const c = getCard(id); if (c) addCard(c); }
+function addCard(card) {
+  const existing = coll.find(c => c.id === card.id);
+  if (existing) {
+    existing.qty = (existing.qty || 1) + 1;
+    save(); snapshot(true); renderHome(); renderColl();
+    toast(`${card.name} — quantité : ${existing.qty}`);
+    return;
+  }
+  card._at = Date.now();
+  card.qty = 1;
+  coll.push(card);
+  save();
+  snapshot(true);
+  renderHome();
+  renderColl();
+  toast('Ajouté à la collection !');
+}
+
+// Incrémente / décrémente la quantité d'une carte
+function incQty(id) {
+  const c = coll.find(c => c.id === id);
+  if (!c) return;
+  c.qty = (c.qty || 1) + 1;
+  save(); snapshot(true); renderColl(); renderHome();
+}
+function decQty(id) {
+  const c = coll.find(c => c.id === id);
+  if (!c) return;
+  c.qty = (c.qty || 1) - 1;
+  if (c.qty <= 0) { removeCard(id); return; }
+  save(); snapshot(true); renderColl(); renderHome();
+}
+
+function removeCard(id) {
+  coll = coll.filter(c => c.id !== id);
+  save();
+  snapshot(true);
+  renderHome();
+  renderColl();
+  toast('Carte retirée', 'ti-trash');
+}
+
+function confirmClear() {
+  if (!coll.length) { toast('Collection déjà vide', 'ti-alert-circle'); return; }
+  showDlg('Vider la collection', `Supprimer les ${coll.length} cartes ?`, () => {
+    coll = []; save(); snapshot(true); renderHome(); renderColl();
+    toast('Collection vidée', 'ti-trash');
+  });
+}
+
+function exportColl() {
+  if (!coll.length) { toast('Collection vide', 'ti-alert-circle'); return; }
+  const rows = [['Nom','Set','Numéro','Rareté','Prix €','PSA 10 €','PSA 9 €','Ajouté le']];
+  coll.forEach(c => {
+    const pr = price(c); const ps = psa(pr, c.rarity);
+    rows.push([c.name, c.set?.name||'', c.number||'', c.rarity||'',
+      pr ? pr.toFixed(2) : '', ps ? ps.p10.toFixed(2) : '', ps ? ps.p9.toFixed(2) : '',
+      c._at ? new Date(c._at).toLocaleDateString('fr-FR') : ''
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = 'pokedeck-collection.csv';
+  a.click();
+  toast('Export CSV téléchargé !');
+}
+
+// ════════════════════════════════════════════════════════
+// HOME
+// ════════════════════════════════════════════════════════
+function renderHome() {
+  const tot = totalVal();
+  document.getElementById('h-val').textContent = fp(tot);
+  document.getElementById('h-cnt').textContent = totalCards();
+  document.getElementById('h-cv').textContent = fp(tot);
+  // delta 7j
+  const d7 = document.getElementById('h-d7');
+  if (hist.length >= 2) {
+    const ago = hist.length >= 7 ? hist[hist.length-7] : hist[0];
+    const diff = tot - (ago?.value || tot);
+    const sign = diff >= 0 ? '+' : '';
+    d7.textContent = sign + fp(Math.abs(diff));
+    d7.className = 'mval ' + (diff >= 0 ? 'g' : 'r');
+    const cd = document.getElementById('h-cd');
+    cd.textContent = sign + fp(Math.abs(diff));
+    cd.className = 'chart-delta ' + (diff >= 0 ? 'pgreen' : 'pamber');
+  } else { d7.textContent = '—'; d7.className = 'mval'; }
+  // Top cartes (les plus chères de la collection)
+  const topEl = document.getElementById('h-top');
+  if (!coll.length) {
+    topEl.innerHTML = '<div class="empty" style="padding:16px;"><i class="ti ti-trophy"></i>Ajoute des cartes pour voir tes plus belles pièces</div>';
+  } else {
+    const top3 = [...coll].sort((a,b) => (price(b)||0)-(price(a)||0)).slice(0,3);
+    topEl.innerHTML = top3.map((c,i) => {
+      const pr = price(c);
+      const medals = ['#e0a030','#9aa8b8','#c08040'];
+      regCard(c);
+      return `<div class="trow" onclick="openOvById('${esc(c.id)}')" style="cursor:pointer;">
+        <div class="tico" style="background:${medals[i]}22;color:${medals[i]};"><i class="ti ti-${i===0?'crown':'medal'}"></i></div>
+        <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(c.name)}</div><div style="font-size:11px;color:var(--t2);">${esc(c.set?.name||'')}${(c.qty||1)>1?` · ×${c.qty}`:''}</div></div>
+        <span class="pblue">${fp(pr)}</span>
+      </div>`;
+    }).join('');
+  }
+  // récents
+  const el = document.getElementById('h-recent');
+  if (!coll.length) { el.innerHTML = '<div class="empty"><i class="ti ti-stack-2"></i>Aucune carte. Scanne ou recherche !</div>'; return; }
+  el.innerHTML = [...coll].sort((a,b)=>(b._at||0)-(a._at||0)).slice(0,5).map(c => cardRowHTML(c)).join('');
+}
+
+function cardRowHTML(card) {
+  const pr = price(card); const img = card.images?.small || '';
+  regCard(card);
+  return `<div class="crow" onclick="openOvById('${esc(card.id)}')">
+    <div class="cthumb">${img ? `<img src="${esc(img)}" alt="${esc(card.name)}" loading="lazy">` : emoji(card.types)}</div>
+    <div class="cinfo"><div class="cname">${esc(card.name)}</div><div class="csub">${esc(card.set?.name||'')} · ${esc(card.number||'')}</div>${badge(card.rarity)}</div>
+    <span class="pblue">${fp(pr)}</span>
+  </div>`;
+}
+
+// Variante avec bouton + rapide pour les résultats de recherche / scan / set
+function searchRowHTML(card) {
+  const pr = price(card); const img = card.images?.small || '';
+  regCard(card);
+  const owned = coll.find(c => c.id === card.id);
+  const qtyTxt = owned ? ` <span class="qty-badge">×${owned.qty||1}</span>` : '';
+  return `<div class="crow" onclick="openOvById('${esc(card.id)}')">
+    <div class="cthumb">${img ? `<img src="${esc(img)}" alt="${esc(card.name)}" loading="lazy">` : emoji(card.types)}</div>
+    <div class="cinfo"><div class="cname">${esc(card.name)}${qtyTxt}</div><div class="csub">${esc(card.set?.name||'')} · ${esc(card.number||'')}</div>${badge(card.rarity)}</div>
+    <div class="row-end">
+      <span class="pblue">${fp(pr)}</span>
+      <button class="quick-add ${owned?'owned':''}" onclick="event.stopPropagation();addCardById('${esc(card.id)}')" title="Ajouter">
+        <i class="ti ti-${owned?'check':'plus'}"></i>
+      </button>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// COLLECTION TAB
+// ════════════════════════════════════════════════════════
+document.getElementById('c-search').addEventListener('input', function() { cfilt = this.value.trim().toLowerCase(); renderColl(); });
+
+function setSort(btn, s) {
+  document.querySelectorAll('.sort-row .spill').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on'); csort = s; renderColl();
+}
+
+function renderColl() {
+  const tot = totalVal();
+  const top = coll.reduce((b,c) => (price(c)||0) > (price(b)||0) ? c : b, coll[0]);
+  document.getElementById('c-tot').textContent = fp(tot);
+  document.getElementById('c-cnt').textContent = totalCards();
+  document.getElementById('c-top').textContent = top ? fp(price(top)) : '—';
+
+  let arr = [...coll];
+  if (cfilt) arr = arr.filter(c => c.name.toLowerCase().includes(cfilt) || (c.set?.name||'').toLowerCase().includes(cfilt));
+  if (csort === 'pd') arr.sort((a,b) => (price(b)||0)-(price(a)||0));
+  else if (csort === 'pa') arr.sort((a,b) => (price(a)||0)-(price(b)||0));
+  else if (csort === 'name') arr.sort((a,b) => a.name.localeCompare(b.name));
+  else if (csort === 'set') arr.sort((a,b) => (a.set?.name||'').localeCompare(b.set?.name||''));
+  else arr.sort((a,b) => (b._at||0)-(a._at||0));
+
+  const el = document.getElementById('c-list');
+  if (!arr.length) {
+    el.innerHTML = !coll.length
+      ? `<div class="coll-empty"><i class="ti ti-stack-2"></i><div class="coll-empty-t">Collection vide</div><div class="coll-empty-s">Scanne une carte ou utilise la recherche texte pour l'ajouter !</div></div>`
+      : `<div class="empty"><i class="ti ti-zoom-question"></i>Aucune carte correspondante</div>`;
+    return;
+  }
+
+  if (csort === 'set') {
+    const grp = {};
+    arr.forEach(c => { const s = c.set?.name||'Autre'; if (!grp[s]) grp[s]=[]; grp[s].push(c); });
+    el.innerHTML = Object.entries(grp).map(([sn,cards]) =>
+      `<div class="grp-hd">${sn}<span>${cards.length} carte${cards.length>1?'s':''}</span></div>${cards.map(c=>ccRowHTML(c)).join('')}`
+    ).join('');
+  } else {
+    el.innerHTML = arr.map(c => ccRowHTML(c)).join('');
+  }
+}
+
+function ccRowHTML(card) {
+  const pr = price(card); const ps = psa(pr, card.rarity);
+  const img = card.images?.small || '';
+  const qty = card.qty || 1;
+  const subtotal = pr ? pr * qty : null;
+  regCard(card);
+  return `<div class="ccrow" onclick="openOvById('${esc(card.id)}')">
+    <div class="cc-thumb">${img ? `<img src="${esc(img)}" alt="${esc(card.name)}" loading="lazy">` : emoji(card.types)}</div>
+    <div class="cc-info">
+      <div class="cc-name">${esc(card.name)}</div>
+      <div class="cc-sub">${esc(card.set?.name||'')} · ${esc(card.number||'')}</div>
+      <div class="cc-prices">
+        <span class="cc-p">${fp(pr)}</span>
+        ${qty > 1 ? `<span style="font-size:9px;color:var(--t3);">→ ${fp(subtotal)}</span>` : ''}
+        ${ps ? `<span class="cc-p10">P10 ${fp(ps.p10)}</span>` : ''}
+      </div>
+    </div>
+    <div class="row-end" onclick="event.stopPropagation();">
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="decQty('${esc(card.id)}')"><i class="ti ti-minus" style="font-size:12px;"></i></button>
+        <span class="qty-num">${qty}</span>
+        <button class="qty-btn" onclick="incQty('${esc(card.id)}')"><i class="ti ti-plus" style="font-size:12px;"></i></button>
+      </div>
+      <button class="cc-del" onclick="removeCard('${esc(card.id)}')"><i class="ti ti-trash"></i></button>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// SNAPSHOT & HISTORIQUE
+// ════════════════════════════════════════════════════════
+function snapshot(silent = false) {
+  const tot = totalVal();
+  const today = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+  const last = hist[hist.length-1];
+  if (last && last.date === today) hist[hist.length-1].value = tot;
+  else hist.push({ date: today, value: tot, ts: Date.now() });
+  if (hist.length > 90) hist = hist.slice(-90);
+  saveH();
+  if (!silent) toast('Snapshot enregistré !');
+  drawChart('cv-sm','cl-sm',14);
+  drawChart('cv-lg','cl-lg',60);
+  renderHist();
+}
+
+function drawChart(cvId, clId, maxPts) {
+  const cv = document.getElementById(cvId); if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.offsetWidth || 300; const H = cv.offsetHeight || 100;
+  cv.width = W*2; cv.height = H*2; ctx.scale(2,2);
+  ctx.clearRect(0,0,W,H);
+  const data = hist.slice(-maxPts);
+  if (data.length < 2) {
+    ctx.fillStyle='#3a5570'; ctx.font='11px Inter'; ctx.textAlign='center';
+    ctx.fillText('Pas encore assez de données', W/2, H/2); return;
+  }
+  const vals = data.map(d=>d.value);
+  const minV = Math.min(...vals); const maxV = Math.max(...vals); const range = maxV-minV||1;
+  const pad = {t:6,b:6,l:4,r:4}; const cw=W-pad.l-pad.r; const ch=H-pad.t-pad.b;
+  const pts = data.map((d,i)=>({x:pad.l+i*(cw/(data.length-1)),y:pad.t+ch-(((d.value-minV)/range)*ch)}));
+  const gr = ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+  gr.addColorStop(0,'rgba(61,142,255,.3)'); gr.addColorStop(1,'rgba(61,142,255,.02)');
+  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,H-pad.b); ctx.lineTo(pts[0].x,H-pad.b); ctx.closePath();
+  ctx.fillStyle=gr; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle='#3d8eff'; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+  pts.forEach((p,i)=>{
+    if (i===0||i===pts.length-1||pts.length<=10) {
+      ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2);
+      ctx.fillStyle=i===pts.length-1?'#3d8eff':'#1a3a6a'; ctx.fill();
+      ctx.strokeStyle='#3d8eff'; ctx.lineWidth=1.5; ctx.stroke();
+    }
+  });
+  const clEl = document.getElementById(clId);
+  if (clEl) {
+    const shown = [data[0], data[Math.floor(data.length/2)], data[data.length-1]];
+    clEl.innerHTML = shown.map(d=>`<span class="chart-lb">${d.date}</span>`).join('');
+  }
+  const cur = vals[vals.length-1];
+  const hvEl = document.getElementById('hv-now'); if (hvEl) hvEl.textContent = fp(cur);
+  const hdEl = document.getElementById('hv-d30');
+  if (hdEl && data.length >= 2) {
+    const diff = cur - vals[0]; const sign = diff>=0?'+':'';
+    const pct = vals[0]>0 ? ((diff/vals[0])*100).toFixed(1) : '0';
+    hdEl.textContent = `${sign}${fp(Math.abs(diff))} (${sign}${pct}%)`;
+    hdEl.className = 'chart-delta ' + (diff>=0?'pgreen':'pamber');
+  }
+}
+
+function renderHist() {
+  const el = document.getElementById('hist-list'); if (!el) return;
+  if (!hist.length) {
+    el.innerHTML = '<div class="empty"><i class="ti ti-chart-bar"></i>Aucun snapshot encore. Ajoute des cartes !</div>'; return;
+  }
+  const rows = [...hist].reverse().slice(0,30);
+  el.innerHTML = `<div class="hist-table">${rows.map((row,i)=>{
+    const prev = rows[i+1]; const diff = prev ? row.value-prev.value : null;
+    const sign = diff===null?'':diff>=0?'+':'';
+    const cls = diff===null?'fl':diff>0?'up':'dn';
+    return `<div class="hist-row">
+      <span class="hist-date">${row.date}</span>
+      <span class="hist-val">${fp(row.value)}</span>
+      <span class="hist-diff ${cls}">${diff!==null?sign+fp(Math.abs(diff)):''}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// SEARCH (mode texte)
+// ════════════════════════════════════════════════════════
+function setMode(mode) {
+  scanMode = mode;
+  document.getElementById('m-cam').style.display = mode==='cam' ? 'block' : 'none';
+  document.getElementById('m-txt').style.display = mode==='txt' ? 'block' : 'none';
+  document.getElementById('mb-cam').classList.toggle('on', mode==='cam');
+  document.getElementById('mb-txt').classList.toggle('on', mode==='txt');
+  if (mode==='cam') startCam(); else stopCam();
+}
+
+document.getElementById('s-input').addEventListener('input', function() {
+  const q = this.value.trim();
+  document.getElementById('s-clear').style.display = q ? 'inline' : 'none';
+  clearTimeout(stimer);
+  const res = document.getElementById('s-res');
+  if (q.length < 2) { res.innerHTML = '<div class="empty"><i class="ti ti-search"></i>Tape au moins 2 lettres</div>'; return; }
+  res.innerHTML = '<div class="spin"><div class="spinico"></div> Recherche...</div>';
+  stimer = setTimeout(() => searchCards(q), 500);
+});
+
+function clearSearch() {
+  document.getElementById('s-input').value = '';
+  document.getElementById('s-clear').style.display = 'none';
+  document.getElementById('s-res').innerHTML = '<div class="empty"><i class="ti ti-search"></i>Tape au moins 2 lettres</div>';
+}
+
+// ── SÉCURITÉ : nettoie la saisie pour la requête Lucene de l'API ──
+function cleanQuery(q) {
+  // retire les guillemets et caractères spéciaux Lucene qui casseraient la requête
+  return q.replace(/["\\:(){}\[\]^~*?]/g, '').trim();
+}
+
+async function searchCards(q) {
+  const res = document.getElementById('s-res');
+  const safe = cleanQuery(q);
+  if (safe.length < 2) { res.innerHTML = '<div class="empty"><i class="ti ti-search"></i>Tape au moins 2 lettres</div>'; return; }
+  try {
+    const r = await pkFetch('/cards?' + buildQ(`name:"${safe}*"`, 20));
+    const d = await r.json();
+    renderCards(d.data || [], res);
+  } catch(e) {
+    res.innerHTML = '<div class="empty"><i class="ti ti-wifi-off"></i>Erreur réseau. Vérifie ta connexion.</div>';
+  }
+}
+
+function renderCards(cards, container) {
+  if (!cards.length) { container.innerHTML = '<div class="empty"><i class="ti ti-mood-sad"></i>Aucune carte trouvée.</div>'; return; }
+  container.innerHTML = cards.map(card => searchRowHTML(card)).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// CAMERA & OCR
+// ════════════════════════════════════════════════════════
+async function startCam() {
+  if (camStream || scanMode !== 'cam') return;
+  const box = document.getElementById('cam-video');
+  if (!box) return;
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1280},height:{ideal:960}}});
+    box.srcObject = camStream;
+  } catch(e) {
+    document.querySelector('.cambox').innerHTML =
+      `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:10px;text-align:center;height:100%;">
+        <i class="ti ti-camera-off" style="font-size:38px;color:var(--t3);"></i>
+        <div style="font-size:12px;color:var(--t2);">Accès caméra refusé.<br>Autorise la caméra dans les réglages ou utilise le mode texte.</div>
+      </div>`;
+  }
+}
+
+function stopCam() {
+  if (camStream) { camStream.getTracks().forEach(t=>t.stop()); camStream = null; }
+}
+
+function flipCam() {
+  facing = facing === 'environment' ? 'user' : 'environment';
+  stopCam(); startCam();
+}
+
+function onFile(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => runOCR(ev.target.result);
+  reader.readAsDataURL(f);
+}
+
+async function doScan() {
+  const vid = document.getElementById('cam-video');
+  const cv = document.getElementById('cam-cv');
+  if (!vid.srcObject) { toast('Caméra non disponible', 'ti-alert-circle'); return; }
+  cv.width = vid.videoWidth; cv.height = vid.videoHeight;
+  cv.getContext('2d').drawImage(vid, 0, 0);
+  runOCR(cv.toDataURL('image/jpeg', 0.9));
+}
+
+async function runOCR(imgData) {
+  const box = document.getElementById('ocr-box');
+  const msg = document.getElementById('ocr-msg');
+  const bar = document.getElementById('ocr-bar');
+  const ico = document.getElementById('ocr-ico');
+  box.className = 'ocr-box show';
+  document.getElementById('cam-res').innerHTML = '';
+  ico.className = 'ti ti-loader spinico';
+  msg.textContent = 'Chargement moteur OCR...'; bar.style.width='10%'; bar.style.background='var(--acc)';
+
+  try {
+    if (!ocrWorker) {
+      ocrWorker = await Tesseract.createWorker('eng', 1, {
+        logger: m => {
+          if (m.status === 'loading tesseract core') bar.style.width='20%';
+          if (m.status === 'loading language traineddata') { msg.textContent='Chargement modèle...'; bar.style.width='45%'; }
+          if (m.status === 'initializing api') { msg.textContent='Initialisation...'; bar.style.width='65%'; }
+          if (m.status === 'recognizing text') { msg.textContent='Analyse...'; bar.style.width=Math.round(65+m.progress*30)+'%'; }
+        }
+      });
+      await ocrWorker.setParameters({tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -'"});
+    }
+    const { data: { text } } = await ocrWorker.recognize(imgData);
+    bar.style.width='95%';
+    const name = extractName(text);
+    if (!name) {
+      ico.className='ti ti-mood-sad'; bar.style.background='var(--amber)';
+      msg.textContent='Nom non détecté. Essaie de mieux centrer la carte ou utilise la recherche texte.'; return;
+    }
+    msg.textContent=`Détecté : "${name}" — Recherche...`; ico.className='ti ti-search';
+    const r = await pkFetch('/cards?' + buildQ(`name:"${name}*"`, 10));
+    const d = await r.json();
+    bar.style.width='100%'; ico.className='ti ti-check'; bar.style.background='var(--green)';
+    msg.textContent=`"${name}" — ${(d.data||[]).length} résultat(s)`;
+    renderCards(d.data||[], document.getElementById('cam-res'));
+  } catch(err) {
+    ico.className='ti ti-alert-circle'; bar.style.background='var(--red)';
+    msg.textContent='Erreur OCR. Réessaie ou utilise la recherche texte.';
+    console.error(err);
+  }
+}
+
+function extractName(raw) {
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l.length>2);
+  const good = lines.filter(l => /^[A-Z][a-zA-Z\s\-']{2,25}$/.test(l) && !/\d|HP/.test(l));
+  if (good.length) return good[0].trim();
+  const fb = lines.find(l => l.length > 3 && /[A-Za-z]{3}/.test(l));
+  return fb ? fb.replace(/[^A-Za-z\s\-']/g,'').trim() : null;
+}
+
+// ════════════════════════════════════════════════════════
+// BASE DE DONNÉES (SETS)
+// ════════════════════════════════════════════════════════
+async function loadSets() {
+  document.getElementById('sets-list').innerHTML = '<div class="spin"><div class="spinico"></div> Chargement des séries...</div>';
+  try {
+    const r = await pkFetch('/sets?orderBy=-releaseDate&pageSize=250');
+    const d = await r.json();
+    allSets = d.data || [];
+    document.getElementById('h-sets').textContent = allSets.length;
+    document.getElementById('sets-lbl').textContent = allSets.length + ' séries';
+    renderSets(allSets);
+  } catch(e) {
+    document.getElementById('sets-list').innerHTML = '<div class="empty"><i class="ti ti-wifi-off"></i>Impossible de charger les séries.<br>Vérifie ta connexion internet.</div>';
+  }
+}
+
+document.getElementById('b-search').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  const base = era ? allSets.filter(s=>s.series?.includes(era)) : allSets;
+  renderSets(q ? base.filter(s=>s.name.toLowerCase().includes(q)||(s.series||'').toLowerCase().includes(q)) : base);
+});
+
+function eraFilt(btn, e) {
+  document.querySelectorAll('#era-row .fpill').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on'); era = e;
+  renderSets(e ? allSets.filter(s=>s.series?.includes(e)) : allSets);
+}
+
+const setRegistry = new Map();
+function renderSets(sets) {
+  if (!sets.length) { document.getElementById('sets-list').innerHTML = '<div class="empty"><i class="ti ti-cards"></i>Aucune série trouvée.</div>'; return; }
+  const grp = {};
+  sets.forEach(s => { const ser=s.series||'Autre'; if(!grp[ser])grp[ser]=[]; grp[ser].push(s); setRegistry.set(s.id, s); });
+  document.getElementById('sets-list').innerHTML = Object.entries(grp).map(([ser,ss]) => `
+    <div class="set-sec">
+      <div class="set-hd" onclick="toggleSer(this)">
+        <div style="display:flex;align-items:center;gap:7px;flex:1;"><span class="set-nm">${esc(ser)}</span><span class="set-mt">${ss.length} set${ss.length>1?'s':''}</span></div>
+        <i class="ti ti-chevron-down" style="color:var(--t3);font-size:14px;transition:transform .2s;"></i>
+      </div>
+      <div class="set-list">
+        ${ss.map(set=>`
+          <div class="crow" onclick="openSetById('${esc(set.id)}')">
+            <div class="cthumb">${set.images?.symbol?`<img src="${esc(set.images.symbol)}" style="width:26px;height:26px;object-fit:contain;">` : '<i class="ti ti-cards" style="font-size:16px;color:var(--t3);"></i>'}</div>
+            <div class="cinfo"><div class="cname">${esc(set.name)}</div><div class="csub">${esc(set.releaseDate||'')} · ${esc(set.printedTotal||set.total||'?')} cartes</div></div>
+            <i class="ti ti-chevron-right" style="color:var(--t3);font-size:14px;"></i>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+function openSetById(id) { const s = setRegistry.get(id); if (s) openSet(s.id, s.name); }
+
+function toggleSer(hd) {
+  const list = hd.nextElementSibling; const open = list.classList.contains('open');
+  list.classList.toggle('open'); hd.querySelector('i').style.transform = open ? '' : 'rotate(180deg)';
+}
+
+async function openSet(setId, setName) {
+  document.getElementById('ov-title').textContent = setName;
+  document.getElementById('ov-body').innerHTML = '<div class="spin"><div class="spinico"></div> Chargement...</div>';
+  document.getElementById('ov').classList.add('open');
+  try {
+    const r = await pkFetch('/cards?' + buildQ(`set.id:${setId}`, 250, 'number'));
+    const d = await r.json();
+    const cards = d.data || [];
+    document.getElementById('ov-body').innerHTML =
+      `<div style="font-size:11px;color:var(--t3);margin-bottom:10px;">${cards.length} cartes · Appuie pour le détail, + pour ajouter</div>`
+      + cards.map(card => {
+        const pr = price(card); const img = card.images?.small || '';
+        const owned = coll.find(c=>c.id===card.id);
+        regCard(card);
+        const qtyTxt = owned ? ` <span class="qty-badge">×${owned.qty||1}</span>` : '';
+        return `<div class="crow" style="margin-bottom:6px;${owned?'border-color:#1a4070;':''}" onclick="reopenCard('${esc(card.id)}')">
+          <div class="cthumb">${img?`<img src="${esc(img)}" loading="lazy">`:emoji(card.types)}</div>
+          <div class="cinfo">
+            <div class="cname">${esc(card.name)}${qtyTxt}</div>
+            <div class="csub">${esc(card.number||'')}/${esc(card.set?.printedTotal||'?')} · ${esc(card.rarity||'—')}</div>
+            ${badge(card.rarity)}
+          </div>
+          <div class="row-end">
+            <span class="pblue">${fp(pr)}</span>
+            <button class="quick-add ${owned?'owned':''}" onclick="event.stopPropagation();addCardById('${esc(card.id)}')">
+              <i class="ti ti-${owned?'check':'plus'}"></i>
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+  } catch(e) {
+    document.getElementById('ov-body').innerHTML = '<div class="empty"><i class="ti ti-wifi-off"></i>Erreur de chargement.</div>';
+  }
+}
+function reopenCard(id) { closeOv(); setTimeout(() => openOvById(id), 280); }
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+(function init() {
+  // Date accueil
+  const d = new Date();
+  const days = ['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+  const months = ['jan','fév','mar','avr','mai','juin','juil','aoû','sep','oct','nov','déc'];
+  document.getElementById('hdate').textContent = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+
+  renderHome();
+  snapshot(true);
+  setTimeout(() => drawChart('cv-sm','cl-sm',14), 100);
+
+  // Précharger les sets en arrière-plan
+  setTimeout(async () => {
+    try {
+      const r = await pkFetch('/sets?orderBy=-releaseDate&pageSize=250');
+      const d = await r.json();
+      allSets = d.data || [];
+      document.getElementById('h-sets').textContent = allSets.length;
+      document.getElementById('sets-lbl').textContent = allSets.length + ' séries';
+    } catch(e) { /* silencieux */ }
+  }, 1000);
+
+  // Charger Tesseract en arrière-plan
+  if (window.Tesseract) {
+    setTimeout(async () => {
+      try {
+        ocrWorker = await Tesseract.createWorker('eng', 1, { logger: ()=>{} });
+        await ocrWorker.setParameters({tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -'"});
+        ocrReady = true;
+      } catch(e) { /* charge à la demande */ }
+    }, 2000);
+  }
+
+  // Charger les vraies actualités TCG
+  loadNews();
+})();
+
+// ════════════════════════════════════════════════════════
+// NEWS TICKER — Multi-proxy robuste
+// Essaie chaque flux via plusieurs proxies CORS jusqu'à succès
+// ════════════════════════════════════════════════════════
+const NEWS_FEEDS = [
+  'https://www.pokeguardian.com/feed',
+  'https://www.pokebeach.com/forums/forum/front-page-news.18/index.rss',
+  'https://nintendowire.com/tag/pokemon-tcg/feed/',
+];
+// Plusieurs proxies CORS — essayés dans l'ordre, le premier qui marche est mémorisé
+const NEWS_PROXIES = [
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u),
+  u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+  u => 'https://thingproxy.freeboard.io/fetch/' + u,
+  u => 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(u),
+];
+
+function categorizeNews(title) {
+  const t = (title || '').toLowerCase();
+  if (t.includes('tournament') || t.includes('worlds') || t.includes('championship') || t.includes('regional') || t.includes('league') || t.includes('compet'))
+    return { label: 'Tournoi', color: '#e0a030' };
+  if (t.includes('price') || t.includes('market') || t.includes('value') || t.includes('sell') || t.includes('reprint'))
+    return { label: 'Prix', color: '#4ecb8a' };
+  if (t.includes('set') || t.includes('expansion') || t.includes('release') || t.includes('promo') || t.includes('pack') || t.includes('booster') || t.includes('celebration') || t.includes('card') || t.includes('collection') || t.includes('reveal'))
+    return { label: 'Set', color: '#3d8eff' };
+  if (t.includes('ban') || t.includes('errata') || t.includes('ruling') || t.includes('rule') || t.includes('format') || t.includes('rotation'))
+    return { label: 'Règles', color: '#e05060' };
+  if (t.includes('meta') || t.includes('deck') || t.includes('tier') || t.includes('strategy') || t.includes('top'))
+    return { label: 'Méta', color: '#b07aff' };
+  return { label: 'TCG', color: '#3d8eff' };
+}
+
+function timeAgo(dateStr) {
+  try {
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if (isNaN(diff)) return '';
+    if (diff < 3600)   return `Il y a ${Math.max(1,Math.floor(diff/60))} min`;
+    if (diff < 86400)  return `Il y a ${Math.floor(diff/3600)} h`;
+    if (diff < 172800) return 'Hier';
+    return `Il y a ${Math.floor(diff/86400)} j`;
+  } catch(e) { return ''; }
+}
+
+// Parse une réponse : soit JSON (rss2json), soit XML brut (autres proxies)
+function parseFeed(text) {
+  // Tentative JSON (rss2json)
+  try {
+    const j = JSON.parse(text);
+    if (j.items?.length) {
+      return j.items.map(i => ({ title: i.title, date: i.pubDate })).filter(i => i.title);
+    }
+  } catch(e) { /* pas du JSON, c'est du XML */ }
+  // Parsing XML RSS/Atom
+  try {
+    const doc = new DOMParser().parseFromString(text, 'text/xml');
+    if (doc.querySelector('parsererror')) return [];
+    let items = Array.from(doc.querySelectorAll('item'));
+    if (!items.length) items = Array.from(doc.querySelectorAll('entry')); // Atom
+    return items.map(it => ({
+      title: (it.querySelector('title')?.textContent || '').trim(),
+      date:  it.querySelector('pubDate')?.textContent
+           || it.querySelector('published')?.textContent
+           || it.querySelector('updated')?.textContent || '',
+    })).filter(i => i.title.length > 4);
+  } catch(e) { return []; }
+}
+
+async function tryFetch(url, ms = 7000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!r.ok) return null;
+    return await r.text();
+  } catch(e) { clearTimeout(timer); return null; }
+}
+
+let newsProxyOk = 0;
+async function loadNews() {
+  for (const feed of NEWS_FEEDS) {
+    for (let p = 0; p < NEWS_PROXIES.length; p++) {
+      const idx = (newsProxyOk + p) % NEWS_PROXIES.length;
+      const text = await tryFetch(NEWS_PROXIES[idx](feed));
+      if (!text) continue;
+      const items = parseFeed(text);
+      if (items.length >= 3) {
+        newsProxyOk = idx; // mémorise le proxy qui marche
+        renderTicker(items.slice(0, 15));
+        return;
+      }
+    }
+  }
+  // Échec total — message neutre
+  document.getElementById('pin-txt').textContent = 'Actualités hors ligne';
+  document.getElementById('pin-time').textContent = 'Réessaie plus tard';
+  document.getElementById('ticker-track').innerHTML =
+    '<div class="ticker-item"><span class="ticker-tag" style="color:#3d8eff;">TCG</span><span class="ticker-txt">Vérifie ta connexion internet</span><span class="ticker-time"></span></div>';
+}
+
+function renderTicker(items) {
+  const pinned = items[0];
+  document.getElementById('pin-txt').textContent =
+    (pinned.title || '').slice(0, 58) + ((pinned.title||'').length > 58 ? '…' : '');
+  document.getElementById('pin-time').textContent = timeAgo(pinned.date);
+
+  const scroll = items.slice(1);
+  const doubled = [...scroll, ...scroll];
+  const track = document.getElementById('ticker-track');
+  track.innerHTML = doubled.map(item => {
+    const { label, color } = categorizeNews(item.title);
+    const title = esc((item.title || '').slice(0, 52) + ((item.title||'').length > 52 ? '…' : ''));
+    return `<div class="ticker-item">
+      <span class="ticker-tag" style="color:${color};">${esc(label)}</span>
+      <span class="ticker-txt">${title}</span>
+      <span class="ticker-time">${esc(timeAgo(item.date))}</span>
+    </div>`;
+  }).join('');
+  track.style.animationDuration = Math.max(20, scroll.length * 5) + 's';
+}
+</script>
+</body>
+</html>
